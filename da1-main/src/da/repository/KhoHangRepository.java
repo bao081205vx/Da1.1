@@ -105,28 +105,87 @@ public class KhoHangRepository {
     }
 
     public List<KhoHang> getProductsByKhuVucKho(int idKhuVucKho) {
-        List<KhoHang> list = new ArrayList<>();
-        String sql = "SELECT kh.id, kh.idSanPham, kh.idKhuVucKho, kh.ngayNhap, sp.tenSP, sp.soLuongTon, sp.hinhAnh " +
-                     "FROM KhoHang kh " +
-                     "JOIN SanPham sp ON kh.idSanPham = sp.id " +
-                     "WHERE kh.idKhuVucKho = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, idKhuVucKho);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                KhoHang khoHang = new KhoHang();
-                khoHang.setId(rs.getInt("id"));
-                khoHang.setIdSanPham(rs.getInt("idSanPham"));
-                khoHang.setTenSP(rs.getString("tenSP"));
-                khoHang.setSoLuongTon(rs.getInt("soLuongTon"));
-                khoHang.setHinhAnh(rs.getString("hinhAnh"));
-                khoHang.setIdKhuVucKho(rs.getInt("idKhuVucKho"));
-                khoHang.setNgayNhap(rs.getTimestamp("ngayNhap"));
-                list.add(khoHang);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+    List<KhoHang> list = new ArrayList<>();
+    String sql = "SELECT kh.id, kh.idSanPham, kh.idKhuVucKho, kh.ngayNhap, sp.soluongton, sp.tenSP, sp.hinhAnh " +
+                 "FROM KhoHang kh " +
+                 "JOIN SanPham sp ON kh.idSanPham = sp.id " +
+                 "WHERE kh.idKhuVucKho = ?";
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, idKhuVucKho);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            KhoHang khoHang = new KhoHang();
+            khoHang.setId(rs.getInt("id"));
+            khoHang.setIdSanPham(rs.getInt("idSanPham"));
+            khoHang.setIdKhuVucKho(rs.getInt("idKhuVucKho"));
+            khoHang.setSoLuongTon(rs.getInt("soLuongTon"));
+            khoHang.setNgayNhap(rs.getTimestamp("ngayNhap"));
+            khoHang.setTenSP(rs.getString("tenSP"));
+            khoHang.setHinhAnh(rs.getString("hinhAnh"));
+            list.add(khoHang);
         }
-        return list;
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+    return list;
+}
+    public boolean addProductToKhoHang(KhoHang khoHang) {
+    KhoHang existing = findKhoHangBySanPhamAndKhuVuc(khoHang.getIdSanPham(), khoHang.getIdKhuVucKho());
+    if (existing != null) {
+        existing.setSoLuongTon(existing.getSoLuongTon() + khoHang.getSoLuongTon());
+        return updateKhoHang(existing);
+    } else {
+        return insertKhoHang(khoHang);
+    }
+}
+
+private KhoHang findKhoHangBySanPhamAndKhuVuc(int idSanPham, int idKhuVucKho) {
+    String sql = "SELECT * FROM KhoHang WHERE idSanPham = ? AND idKhuVucKho = ?";
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, idSanPham);
+        stmt.setInt(2, idKhuVucKho);
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            KhoHang khoHang = new KhoHang();
+            khoHang.setId(rs.getInt("id"));
+            khoHang.setIdSanPham(rs.getInt("idSanPham"));
+            khoHang.setIdKhuVucKho(rs.getInt("idKhuVucKho"));
+            khoHang.setSoLuongTon(rs.getInt("soLuongTon"));
+            khoHang.setNgayNhap(rs.getTimestamp("ngayNhap"));
+            return khoHang;
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return null;
+}
+
+private boolean updateKhoHang(KhoHang khoHang) {
+    String sql = "UPDATE KhoHang SET soLuongTon = ?, ngayNhap = ? WHERE id = ?";
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, khoHang.getSoLuongTon());
+        stmt.setTimestamp(2, khoHang.getNgayNhap() != null ? khoHang.getNgayNhap() : new Timestamp(System.currentTimeMillis()));
+        stmt.setInt(3, khoHang.getId());
+        int rowsAffected = stmt.executeUpdate();
+        return rowsAffected > 0;
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+private boolean insertKhoHang(KhoHang khoHang) {
+    String sql = "INSERT INTO KhoHang (idSanPham, idKhuVucKho, soLuongTon, ngayNhap) VALUES (?, ?, ?, ?)";
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, khoHang.getIdSanPham());
+        stmt.setInt(2, khoHang.getIdKhuVucKho());
+        stmt.setInt(3, khoHang.getSoLuongTon());
+        stmt.setTimestamp(4, khoHang.getNgayNhap() != null ? khoHang.getNgayNhap() : new Timestamp(System.currentTimeMillis()));
+        int rowsAffected = stmt.executeUpdate();
+        return rowsAffected > 0;
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
 }

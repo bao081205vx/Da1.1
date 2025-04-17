@@ -58,20 +58,37 @@ public class NhapKhoRespository {
 
     return list;
 }
-    public boolean addNhapKho(NhapKho nhapKho, int idNhaCungCap, int idNhanVien) {
-    String insert = "INSERT INTO NhapKho (maNhap, idNhaCungCap, idNhanVien, ngayNhap, tongTien) VALUES (?, ?, ?, ?, ?)";
+
+    public boolean addNhapKho(NhapKho nhapKho) {
+    String insert = "INSERT INTO NhapKho (maNhap, idNhaCungCap, idNhanVien, ngayNhap, tongTien, idSanPham, idKhuVucKho, soLuong) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     try {
+        conn.setAutoCommit(false);
         PreparedStatement ps = conn.prepareStatement(insert);
         ps.setString(1, nhapKho.getManhap());
-        ps.setInt(2, idNhaCungCap);
-        ps.setInt(3, idNhanVien);
-        ps.setTimestamp(4, (Timestamp) nhapKho.getNgaynhap());
+        ps.setInt(2, nhapKho.getIdNhaCungCap());
+        ps.setInt(3, nhapKho.getIdNhanVien());
+        ps.setTimestamp(4, nhapKho.getNgaynhap());
         ps.setDouble(5, nhapKho.getTongtien());
+        ps.setInt(6, nhapKho.getIdsanpham());
+        ps.setInt(7, nhapKho.getIdkhuvuc());
+        ps.setInt(8, nhapKho.getSoLuong());
         int rowsAffected = ps.executeUpdate();
+        conn.commit();
         return rowsAffected > 0;
     } catch (SQLException e) {
         System.out.println("Error adding NhapKho: " + e.getMessage());
+        try {
+            conn.rollback();
+        } catch (SQLException rollbackEx) {
+            System.out.println("Rollback failed: " + rollbackEx.getMessage());
+        }
         return false;
+    } finally {
+        try {
+            conn.setAutoCommit(true);
+        } catch (SQLException e) {
+            System.out.println("Failed to reset AutoCommit: " + e.getMessage());
+        }
     }
 }
     public boolean updateNhapKho(int id, int idNhaCungCap, int idNhanVien) {

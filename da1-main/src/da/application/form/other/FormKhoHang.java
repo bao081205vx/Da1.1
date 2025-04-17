@@ -12,10 +12,12 @@ import da.model.KhoHang;
 import da.model.NhapKho;
 import da.model.NhaCC;
 import da.model.NhanVien;
+import da.model.SanPham;
 import da.repository.KhoHangRepository;
 import da.repository.NhapKhoRespository;
 import da.repository.NhaCungCapRepository;
 import da.service.NhanVienService;
+import da.service.SanPhamService;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -518,6 +520,11 @@ public class FormKhoHang extends javax.swing.JPanel {
         crazyPanel7.add(lblFilter1);
 
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox1ActionPerformed(evt);
+            }
+        });
         crazyPanel7.add(jComboBox1);
 
         btnaddnk.setText("Add new");
@@ -809,16 +816,31 @@ public class FormKhoHang extends javax.swing.JPanel {
         // TODO add your handling code here:
     NhanVienService nhanVienService = new NhanVienService();
     NhaCungCapRepository nhaCCRepository = new NhaCungCapRepository();
+    SanPhamService sanPhamRepository = new SanPhamService();
+    KhoHangRepository khuVucKhoRepository = new KhoHangRepository();
+
+    // Fetch data for combo boxes
     List<NhanVien> nhanVienList = nhanVienService.getAllNhanVien();
     List<NhaCC> nhaCCList = nhaCCRepository.getAllNhaCungCap();
+    List<SanPham> sanPhamList = sanPhamRepository.getAll();
+    List<KhuVucKho> khuVucKhoList = khuVucKhoRepository.getAllKhuVucKho();
+
+    // Create input components
     JTextField txtMaNhap = new JTextField();
     JComboBox<NhaCC> cbNhaCungCap = new JComboBox<>(new DefaultComboBoxModel<>(nhaCCList.toArray(new NhaCC[0])));
     JComboBox<NhanVien> cbNhanVien = new JComboBox<>(new DefaultComboBoxModel<>(nhanVienList.toArray(new NhanVien[0])));
+    JComboBox<SanPham> cbSanPham = new JComboBox<>(new DefaultComboBoxModel<>(sanPhamList.toArray(new SanPham[0])));
+    JTextField txtSoLuong = new JTextField();
+    JComboBox<KhuVucKho> cbKhuVucKho = new JComboBox<>(new DefaultComboBoxModel<>(khuVucKhoList.toArray(new KhuVucKho[0])));
     JTextField txtNgayNhap = new JTextField();
     JTextField txtTongTien = new JTextField();
+
+    // Pre-fill the date field with today's date
     LocalDate today = LocalDate.now();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     txtNgayNhap.setText(today.format(formatter));
+
+    // Custom renderers for combo boxes (unchanged)
     cbNhaCungCap.setRenderer(new DefaultListCellRenderer() {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -829,6 +851,7 @@ public class FormKhoHang extends javax.swing.JPanel {
             return this;
         }
     });
+
     cbNhanVien.setRenderer(new DefaultListCellRenderer() {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -839,39 +862,54 @@ public class FormKhoHang extends javax.swing.JPanel {
             return this;
         }
     });
+
+    cbSanPham.setRenderer(new DefaultListCellRenderer() {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            if (value instanceof SanPham sanPham) {
+                setText(sanPham.getTensp());
+            }
+            return this;
+        }
+    });
+
+    cbKhuVucKho.setRenderer(new DefaultListCellRenderer() {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            if (value instanceof KhuVucKho khuVucKho) {
+                setText(khuVucKho.getTenKhuVuc());
+            }
+            return this;
+        }
+    });
+
+    // Set up the panel layout
     JPanel panel = new JPanel(new GridBagLayout());
     GridBagConstraints gbc = new GridBagConstraints();
     gbc.insets = new Insets(10, 10, 10, 10);
     gbc.fill = GridBagConstraints.HORIZONTAL;
-    gbc.gridx = 0;
-    gbc.gridy = 0;
-    panel.add(new JLabel("Mã Nhập Kho:"), gbc);
-    gbc.gridx = 1;
-    panel.add(txtMaNhap, gbc);
 
-    gbc.gridx = 0;
-    gbc.gridy = 1;
-    panel.add(new JLabel("Nhà Cung Cấp:"), gbc);
-    gbc.gridx = 1;
-    panel.add(cbNhaCungCap, gbc);
+    // Add components to the panel
+    gbc.gridx = 0; gbc.gridy = 0; panel.add(new JLabel("Mã Nhập Kho:"), gbc);
+    gbc.gridx = 1; panel.add(txtMaNhap, gbc);
+    gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Nhà Cung Cấp:"), gbc);
+    gbc.gridx = 1; panel.add(cbNhaCungCap, gbc);
+    gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Nhân Viên Nhập:"), gbc);
+    gbc.gridx = 1; panel.add(cbNhanVien, gbc);
+    gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Sản Phẩm:"), gbc);
+    gbc.gridx = 1; panel.add(cbSanPham, gbc);
+    gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Số Lượng:"), gbc);
+    gbc.gridx = 1; panel.add(txtSoLuong, gbc);
+    gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Khu Vực Kho:"), gbc);
+    gbc.gridx = 1; panel.add(cbKhuVucKho, gbc);
+    gbc.gridx = 0; gbc.gridy = 6; panel.add(new JLabel("Ngày Nhập (dd/MM/yyyy):"), gbc);
+    gbc.gridx = 1; panel.add(txtNgayNhap, gbc);
+    gbc.gridx = 0; gbc.gridy = 7; panel.add(new JLabel("Tổng Tiền:"), gbc);
+    gbc.gridx = 1; panel.add(txtTongTien, gbc);
 
-    gbc.gridx = 0;
-    gbc.gridy = 2;
-    panel.add(new JLabel("Nhân Viên Nhập:"), gbc);
-    gbc.gridx = 1;
-    panel.add(cbNhanVien, gbc);
-
-    gbc.gridx = 0;
-    gbc.gridy = 3;
-    panel.add(new JLabel("Ngày Nhập (dd/MM/yyyy):"), gbc);
-    gbc.gridx = 1;
-    panel.add(txtNgayNhap, gbc);
-
-    gbc.gridx = 0;
-    gbc.gridy = 4;
-    panel.add(new JLabel("Tổng Tiền:"), gbc);
-    gbc.gridx = 1;
-    panel.add(txtTongTien, gbc);
+    // Input validation and saving loop
     while (true) {
         int result = JOptionPane.showConfirmDialog(
             null,
@@ -884,11 +922,18 @@ public class FormKhoHang extends javax.swing.JPanel {
         if (result != JOptionPane.OK_OPTION) {
             return;
         }
+
+        // Get input values
         String maNhap = txtMaNhap.getText().trim();
         NhaCC nhaCungCap = (NhaCC) cbNhaCungCap.getSelectedItem();
         NhanVien nhanVien = (NhanVien) cbNhanVien.getSelectedItem();
+        SanPham sanPham = (SanPham) cbSanPham.getSelectedItem();
+        String soLuongStr = txtSoLuong.getText().trim();
+        KhuVucKho khuVucKho = (KhuVucKho) cbKhuVucKho.getSelectedItem();
         String ngayNhapStr = txtNgayNhap.getText().trim();
         String tongTienStr = txtTongTien.getText().trim();
+
+        // Validation (unchanged)
         if (maNhap.isEmpty()) {
             Notifications.getInstance().show(Notifications.Type.WARNING, Notifications.Location.TOP_CENTER, "Mã nhập kho không được để trống!");
             txtMaNhap.requestFocus();
@@ -909,11 +954,28 @@ public class FormKhoHang extends javax.swing.JPanel {
             cbNhanVien.requestFocus();
             continue;
         }
+        if (sanPham == null) {
+            Notifications.getInstance().show(Notifications.Type.WARNING, Notifications.Location.TOP_CENTER, "Vui lòng chọn sản phẩm!");
+            cbSanPham.requestFocus();
+            continue;
+        }
+        if (soLuongStr.isEmpty()) {
+            Notifications.getInstance().show(Notifications.Type.WARNING, Notifications.Location.TOP_CENTER, "Số lượng không được để trống!");
+            txtSoLuong.requestFocus();
+            continue;
+        }
+        if (khuVucKho == null) {
+            Notifications.getInstance().show(Notifications.Type.WARNING, Notifications.Location.TOP_CENTER, "Vui lòng chọn khu vực kho!");
+            cbKhuVucKho.requestFocus();
+            continue;
+        }
         if (ngayNhapStr.isEmpty()) {
             Notifications.getInstance().show(Notifications.Type.WARNING, Notifications.Location.TOP_CENTER, "Ngày nhập không được để trống!");
             txtNgayNhap.requestFocus();
             continue;
         }
+
+        // Validate date format
         Timestamp ngayNhap = null;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -925,6 +987,8 @@ public class FormKhoHang extends javax.swing.JPanel {
             txtNgayNhap.requestFocus();
             continue;
         }
+
+        // Validate total amount
         double tongTien;
         try {
             tongTien = Double.parseDouble(tongTienStr);
@@ -938,16 +1002,51 @@ public class FormKhoHang extends javax.swing.JPanel {
             txtTongTien.requestFocus();
             continue;
         }
+
+        // Validate quantity
+        int soLuong;
+        try {
+            soLuong = Integer.parseInt(soLuongStr);
+            if (soLuong <= 0) {
+                Notifications.getInstance().show(Notifications.Type.WARNING, Notifications.Location.TOP_CENTER, "Số lượng phải lớn hơn 0!");
+                txtSoLuong.requestFocus();
+                continue;
+            }
+        } catch (NumberFormatException e) {
+            Notifications.getInstance().show(Notifications.Type.WARNING, Notifications.Location.TOP_CENTER, "Số lượng phải là số hợp lệ!");
+            txtSoLuong.requestFocus();
+            continue;
+        }
+
+        // Create NhapKho object
         NhapKho nhapKho = new NhapKho();
         nhapKho.setManhap(maNhap);
         nhapKho.setNhacungcap(nhaCungCap.getTen());
         nhapKho.setNhanvien(nhanVien.getHo() + " " + nhanVien.getTen());
+        nhapKho.setSanPham(sanPham.getTensp());
+        nhapKho.setSoLuong(soLuong);
+        nhapKho.setKhuvuckho(khuVucKho.getTenKhuVuc());
         nhapKho.setNgaynhap(ngayNhap);
         nhapKho.setTongtien(tongTien);
-        boolean isAdded = nhapKhoRespository.addNhapKho(nhapKho, nhaCungCap.getId(), nhanVien.getId());
+        nhapKho.setIdNhaCungCap(nhaCungCap.getId());
+        nhapKho.setIdNhanVien(nhanVien.getId());
+        nhapKho.setIdsanpham(sanPham.getId());
+        nhapKho.setIdkhuvuc(khuVucKho.getId());
+
+        // Save to database (trigger will handle KhoHang update)
+        boolean isAdded = nhapKhoRespository.addNhapKho(nhapKho);
         if (isAdded) {
             Notifications.getInstance().show(Notifications.Type.SUCCESS, Notifications.Location.TOP_CENTER, "Thêm phiếu nhập kho thành công!");
             loadNhapKho(nhapKhoRespository.getListNhapKho());
+
+            // Update myList1 if the currently selected khu vực kho matches
+            int selectedRow = tblKhuVuc.getSelectedRow();
+            if (selectedRow != -1) {
+                int selectedKhuVucKhoId = (int) tblKhuVuc.getValueAt(selectedRow, 0);
+                if (selectedKhuVucKhoId == khuVucKho.getId()) {
+                    applyListStyle(selectedKhuVucKhoId);
+                }
+            }
         } else {
             Notifications.getInstance().show(Notifications.Type.ERROR, Notifications.Location.TOP_CENTER, "Thêm phiếu nhập kho thất bại!");
         }
@@ -1124,6 +1223,10 @@ public class FormKhoHang extends javax.swing.JPanel {
     loadNhapKho(nhapKhoRespository.getListNhapKho());
     Notifications.getInstance().show(Notifications.Type.INFO, Notifications.Location.TOP_CENTER, "Đã làm mới bảng phiếu nhập kho!");
     }//GEN-LAST:event_btnLamMoiActionPerformed
+
+    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jComboBox1ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

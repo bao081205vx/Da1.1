@@ -40,6 +40,8 @@ public class UpdateSanPham extends javax.swing.JPanel {
         initMS();
         initNCC();
         populateFormData();
+//        txtSoLuong.setEditable(false);
+        txtSoLuong.setEnabled(false);
     }
     
     private void populateFormData() {
@@ -260,6 +262,7 @@ public class UpdateSanPham extends javax.swing.JPanel {
             e.printStackTrace();
             Notifications.getInstance().show(Notifications.Type.ERROR, Notifications.Location.TOP_CENTER, "Lỗi: " + e.getMessage());
         }
+        
     }
 
     private void resizeAndSetImage(File file) {
@@ -414,6 +417,12 @@ public class UpdateSanPham extends javax.swing.JPanel {
 
         jLabel6.setText("Số Lượng");
         crazyPanel1.add(jLabel6);
+
+        txtSoLuong.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtSoLuongActionPerformed(evt);
+            }
+        });
         crazyPanel1.add(txtSoLuong);
         crazyPanel1.add(jSeparator1);
 
@@ -550,6 +559,10 @@ public class UpdateSanPham extends javax.swing.JPanel {
     private void cmdSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdSaveActionPerformed
         update();
     }//GEN-LAST:event_cmdSaveActionPerformed
+
+    private void txtSoLuongActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSoLuongActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSoLuongActionPerformed
 
     private ModelProfile profile;
     // Variables declaration - do not modify//GEN-BEGIN:variables
