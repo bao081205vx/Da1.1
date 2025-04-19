@@ -1,22 +1,19 @@
 package da.component;
 
+import da.model.GioHang;
 import da.model.SanPham;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-public class MyList<E> extends JList<E> {
+public class MyListGioHang<E> extends JList<E> {
 
     private final DefaultListModel<E> model;
 
-    public MyList() {
+    public MyListGioHang() {
         model = new DefaultListModel<>();
         setModel(model);
-
-        // Tăng chiều cao của mỗi mục để tạo khoảng cách
         setFixedCellHeight(80);
-
-        // Tùy chỉnh Renderer để hiển thị đẹp hơn
         setCellRenderer(new ProductRenderer());
     }
 
@@ -44,19 +41,16 @@ public class MyList<E> extends JList<E> {
 
         @Override
         public Component getListCellRendererComponent(JList<? extends E> list, E value, int index, boolean isSelected, boolean cellHasFocus) {
-            if (value instanceof SanPham) {
-                SanPham sp = (SanPham) value;
+            if (value instanceof GioHang) {
+                GioHang gh = (GioHang) value;
 
-                // Đặt nội dung
-                lblTitle.setText("<html><b>" + sp.getTensp() + "</b></html>");
-                lblQuantity.setText("Số lượng: " + sp.getSoluongton());
+                lblTitle.setText("<html><b>" + gh.getTenSP()+ "</b></html>");
+                lblQuantity.setText("Số lượng: " + gh.getSoLuong());
 
-                // Hiển thị hình ảnh (scale cho vừa)
-                ImageIcon icon = new ImageIcon(sp.getHinhanh());
+                ImageIcon icon = new ImageIcon(gh.getHinhAnh());
                 Image img = icon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
                 lblImage.setIcon(new ImageIcon(img));
 
-                // Căn chỉnh màu nền xen kẽ (không đổi màu khi được chọn)
                 setBackground(index % 2 == 0 ? Color.WHITE : new Color(245, 245, 245));
             }
             return this;

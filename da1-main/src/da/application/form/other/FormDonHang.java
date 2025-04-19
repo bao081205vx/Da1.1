@@ -4,36 +4,29 @@ package da.application.form.other;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import da.application.Application;
-import da.component.MyList;
+import da.component.MyList1;
 import da.component.ProductItem;
 import da.model.GioHang;
 import da.model.SanPham;
 import da.service.GioHangService;
 import da.service.SanPhamService;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -50,7 +43,7 @@ import raven.toast.Notifications;
 public class FormDonHang extends javax.swing.JPanel {
     SanPhamService service = new SanPhamService();
     GioHangService service1 = new GioHangService();
-        private String Email;
+    private String Email;
     
     /**
      * Creates new form FormDonHang
@@ -60,11 +53,11 @@ public class FormDonHang extends javax.swing.JPanel {
         initComponents();
         initMS();
         initKT();
-        applyListStyle();
         applyTableStyle(tblSanPham);
         applyTableStyle(tblGioHang);
         loadSanPhamData(service.searchSanPham(""));
         refreshGioHangData();
+        //updateTotalOnLabel(jLabel9);
         
     }
     
@@ -109,22 +102,27 @@ public class FormDonHang extends javax.swing.JPanel {
     }
     
     
-    private void applyListStyle() {
-        MyList<ProductItem> list = new MyList<>();
-        list.addItem(new ProductItem("Xiaomi Redmi Note 12", 22, "D:\\da1\\da1\\src\\da\\icon\\png\\img6.png"));
-        list.addItem(new ProductItem("Samsung Galaxy S20 FE", 6, "D:\\da1\\da1\\src\\da\\icon\\png\\img5.png"));
-        list.addItem(new ProductItem("Samsung Galaxy S22+ 5G", 20, "D:\\da1\\da1\\src\\da\\icon\\png\\img4.png"));
-        list.addItem(new ProductItem("OPPO Reno6 Pro 5G", 7, "D:\\da1\\da1\\src\\da\\icon\\png\\aomu.jpg"));
-
-        JScrollPane scrollPane = new JScrollPane(list);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        myList1.setLayout(new BorderLayout()); // Đảm bảo sử dụng BorderLayout
-        myList1.add(scrollPane, BorderLayout.CENTER);
-
-        myList1.revalidate();
-        myList1.repaint();
+    private void applyListStyle(List<Integer> id) {
+        List<GioHang> khList = service1.getProductsByGioHang(id);
+        myList11.removeAll();
+        if (khList.isEmpty()) {
+            // JLabel emptyLabel = new JLabel("Không có sản phẩm nào trong khu vực kho này.");
+            // emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            // myList11.setLayout(new BorderLayout());
+            // myList11.add(emptyLabel, BorderLayout.CENTER);
+        } else {
+            MyList1<GioHang> list = new MyList1<>();
+            for (GioHang kh : khList) {
+                list.addItem(kh);
+            }
+            JScrollPane scrollPane = new JScrollPane(list);
+            scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            myList11.setLayout(new BorderLayout());
+            myList11.add(scrollPane, BorderLayout.CENTER);
+        }
+        myList11.revalidate();
+        myList11.repaint();
     }
 
         
@@ -143,9 +141,19 @@ public class FormDonHang extends javax.swing.JPanel {
         }
         
         public void refreshSanPham() {
-            ArrayList<SanPham> danhSachSanPham = service.getAll();
-            loadSanPhamData(danhSachSanPham);
-            Notifications.getInstance().show(Notifications.Type.INFO, Notifications.Location.TOP_CENTER, "Đã làm mới danh sách sản phẩm!");
+            // Refresh product table
+        ArrayList<SanPham> danhSachSanPham = service.getAll();
+        loadSanPhamData(danhSachSanPham);
+        
+        // Refresh cart table
+        ArrayList<GioHang> danhSachGioHang = service1.getAllGioHang();
+        loadGioHangData(danhSachGioHang);
+        
+        // Refresh myList11 with selected items
+        List<Integer> selectedIds = getSelectedIdsFromTable();
+        applyListStyle(selectedIds);
+        
+        Notifications.getInstance().show(Notifications.Type.INFO, Notifications.Location.TOP_CENTER, "Đã làm mới danh sách sản phẩm!");
         }
         
         public void initMS() {
@@ -217,8 +225,7 @@ public class FormDonHang extends javax.swing.JPanel {
                 gioHang.getSoLuong(),       
                 gioHang.getTongTien(),
                 gioHang.getTenMauSac(),
-                gioHang.getKichThuoc(),
-                gioHang.getNgayThem()    
+                gioHang.getKichThuoc()
             };
             tblModel.addRow(rowData);
         }
@@ -336,9 +343,8 @@ public class FormDonHang extends javax.swing.JPanel {
             }
             String tenMauSac = cboMau.getSelectedItem().toString();
             String kichThuoc = cboKichThuoc.getSelectedItem().toString();
-            Timestamp ngayThem = new Timestamp(System.currentTimeMillis());
             // Tạo đối tượng GioHang và thêm vào cơ sở dữ liệu
-            GioHang gioHang = new GioHang(0, idNguoiDung, idSanPham, maSP, tenSP,tenMauSac,kichThuoc, tongTien, soLuong, ngayThem);
+            GioHang gioHang = new GioHang(0, idNguoiDung, idSanPham, maSP, tenSP,tenMauSac,kichThuoc, tongTien, soLuong);
             boolean success = service1.addGioHang(gioHang);
             if (success) {
                 boolean updated = service.updateSoLuongTon(idSanPham, soLuong);
@@ -418,7 +424,7 @@ public class FormDonHang extends javax.swing.JPanel {
 
                 // Tiêu đề cột
                 String[] headers = {"STT", "ID Giỏ Hàng", "Mã Sản Phẩm", "Tên Sản Phẩm", "Số Lượng", 
-                                    "Tổng Tiền", "Màu Sắc", "Kích Thước", "Ngày Thêm"};
+                                    "Tổng Tiền", "Màu Sắc", "Kích Thước"};
                 Row rowCol = sheet.createRow(0);
                 for (int i = 0; i < headers.length; i++) {
                     rowCol.createCell(i).setCellValue(headers[i]);
@@ -436,7 +442,6 @@ public class FormDonHang extends javax.swing.JPanel {
                     row.createCell(5).setCellValue(gh.getTongTien().toString());
                     row.createCell(6).setCellValue(gh.getTenMauSac());
                     row.createCell(7).setCellValue(gh.getKichThuoc());
-                    row.createCell(8).setCellValue(gh.getNgayThem().toString());
                 }
 
                 // Ghi dữ liệu ra file
@@ -452,6 +457,33 @@ public class FormDonHang extends javax.swing.JPanel {
     public void search() {
         String keyword = txtSearch.getText().trim();
         loadSanPhamData(service.searchSanPham(keyword));
+    }
+    
+    private void capNhatTongTien(JLabel totalLabel) {
+    List<Integer> selectedIds = getSelectedIdsFromTable();
+    BigDecimal total = tinhTongTien(selectedIds);
+    totalLabel.setText(total.toString() + " VND");
+}
+
+    private List<Integer> getSelectedIdsFromTable() {
+        List<Integer> ids = new ArrayList<>();
+        for (int row = 0; row < tblGioHang.getRowCount(); row++) {
+            Boolean isChecked = (Boolean) tblGioHang.getValueAt(row, tblGioHang.getColumnCount() - 1); // Cột checkbox
+            if (isChecked != null && isChecked) { // Kiểm tra nếu checkbox được tick
+                int id = (int) tblGioHang.getValueAt(row, 0); // Lấy ID từ cột đầu tiên
+                ids.add(id);
+            }
+        }
+        return ids;
+    }
+
+    private BigDecimal tinhTongTien(List<Integer> selectedIds) {
+        BigDecimal total = BigDecimal.ZERO; //
+        List<GioHang> selectedProducts = service1.getProductsByGioHang(selectedIds);
+        for (GioHang product : selectedProducts) {
+            total = total.add(product.getTongTien());
+        }
+        return total;
     }
     
     /**
@@ -505,8 +537,9 @@ public class FormDonHang extends javax.swing.JPanel {
         jLabel8 = new javax.swing.JLabel();
         crazyPanel24 = new raven.crazypanel.CrazyPanel();
         cmdUpdate5 = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        myList1 = new da.component.MyList<>();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        myList11 = new da.component.MyList1<>();
+        jLabel9 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jButton1 = new javax.swing.JButton();
 
@@ -828,14 +861,14 @@ public class FormDonHang extends javax.swing.JPanel {
 
             },
             new String [] {
-                "ID", "Mã Sản Phẩm", "Tên SP", "Số lượng", "Tổng tiền", "Màu Sắc", "Size", "Ngày", ""
+                "ID", "Mã Sản Phẩm", "Tên SP", "Số lượng", "Tổng tiền", "Màu Sắc", "Size", ""
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
+                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, true
+                false, false, false, false, false, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -844,6 +877,11 @@ public class FormDonHang extends javax.swing.JPanel {
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
+            }
+        });
+        tblGioHang.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblGioHangMouseClicked(evt);
             }
         });
         jScrollPane8.setViewportView(tblGioHang);
@@ -867,7 +905,7 @@ public class FormDonHang extends javax.swing.JPanel {
         panelTransparent2.setPreferredSize(new java.awt.Dimension(139, 500));
 
         jLabel8.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
-        jLabel8.setForeground(new java.awt.Color(255, 51, 51));
+        jLabel8.setForeground(new java.awt.Color(51, 51, 51));
         jLabel8.setText("Tổng Tiền:");
         panelTransparent2.add(jLabel8);
         jLabel8.setBounds(40, 350, 110, 22);
@@ -892,20 +930,30 @@ public class FormDonHang extends javax.swing.JPanel {
         ));
 
         cmdUpdate5.setText("Tạo Hóa Đơn");
+        cmdUpdate5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdUpdate5ActionPerformed(evt);
+            }
+        });
         crazyPanel24.add(cmdUpdate5);
 
         panelTransparent2.add(crazyPanel24);
         crazyPanel24.setBounds(30, 380, 210, 40);
 
-        myList1.setModel(new javax.swing.AbstractListModel<String>() {
+        myList11.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
-        jScrollPane1.setViewportView(myList1);
+        jScrollPane2.setViewportView(myList11);
 
-        panelTransparent2.add(jScrollPane1);
-        jScrollPane1.setBounds(10, 10, 270, 330);
+        panelTransparent2.add(jScrollPane2);
+        jScrollPane2.setBounds(10, 10, 270, 320);
+
+        jLabel9.setForeground(new java.awt.Color(255, 0, 51));
+        jLabel9.setText("0 VNĐ");
+        panelTransparent2.add(jLabel9);
+        jLabel9.setBounds(130, 350, 150, 20);
 
         crazyPanel13.add(panelTransparent2);
 
@@ -996,7 +1044,24 @@ public class FormDonHang extends javax.swing.JPanel {
         search();
     }//GEN-LAST:event_jButton2ActionPerformed
 
+    private void tblGioHangMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblGioHangMouseClicked
+        List<Integer> ids = new ArrayList<>();
+    for (int row = 0; row < tblGioHang.getRowCount(); row++) {
+        Boolean isChecked = (Boolean) tblGioHang.getValueAt(row, tblGioHang.getColumnCount() - 1); // Cột checkbox
+        if (isChecked != null && isChecked) {
+            int id = (int) tblGioHang.getValueAt(row, 0);
+            ids.add(id);
+            capNhatTongTien(jLabel9);
+        }
+    }
+    applyListStyle(ids); // Gọi phương thức hiển thị danh sách sản phẩm
+    }//GEN-LAST:event_tblGioHangMouseClicked
 
+    private void cmdUpdate5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdUpdate5ActionPerformed
+        Application.showForm(new HoaDonForm());
+    }//GEN-LAST:event_cmdUpdate5ActionPerformed
+
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cboKichThuoc;
     private javax.swing.JComboBox<String> cboMau;
@@ -1027,13 +1092,14 @@ public class FormDonHang extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
     private da.component.MaterialTabbed materialTabbed1;
-    private da.component.MyList<String> myList1;
+    private da.component.MyList1<String> myList11;
     private da.component.PanelTransparent panelTransparent1;
     private da.component.PanelTransparent panelTransparent2;
     private javax.swing.JTable tblGioHang;
